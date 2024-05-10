@@ -1,0 +1,54 @@
+version: "3.4"
+
+services:
+  db:
+    image: postgres:16.2
+    environment:
+      POSTGRES_DB: "meteorite"
+      POSTGRES_USER: "user"
+      POSTGRES_PASSWORD: "user"
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app-network
+
+  meteoriteswebapi:
+    image: ${DOCKER_REGISTRY-}meteoriteswebapi
+    build:
+      context: .
+      dockerfile: MeteoritesWebApi/Dockerfile
+    environment:
+      DOTNET_ENVIRONMENT: "Docker"
+    ports:
+      - "4000:8080"
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  loadmeteoritesinfows:
+    image: ${DOCKER_REGISTRY-}loadmeteoritesinfows
+    build:
+      context: .
+      dockerfile: LoadMeteoritesInfoWS/Dockerfile
+    environment:
+      DOTNET_ENVIRONMENT: "Docker"
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  ui:
+    build:
+      context: ./UI/client
+      dockerfile: Dockerfile
+    ports:
+      - "3000:8080"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
