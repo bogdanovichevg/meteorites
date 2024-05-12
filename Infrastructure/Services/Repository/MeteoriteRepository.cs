@@ -17,36 +17,39 @@ namespace Infrastructure.Services.Repository
         {
             _provider = provider;
         }
-        public async Task<IEnumerable<GroupedMeteorites>> GetAllByParamAsync(FiltersMeteoritesInfo filters)
+
+        public async Task<IEnumerable<MeteoriteGroupRow>> GetFiltered(MeteoritesFilters filters)
         {
-            using var connection = _provider.GetConnection();
-            var param = new { filters.FromYear, filters.ToYear, filters.ClassName, Name = $"%{filters.MeteoriteName}%", filters.Take, filters.Skip };
+            var param = new { filters.FromYear, filters.ToYear, filters.MeteoriteClass, Name = $"%{filters.MeteoriteName}%", filters.Take, filters.Skip };
             var sql = new StringBuilder();
 
             sql.Append($@"
                 SELECT COUNT(1) OVER() as totalCount, year, count(name) as count, sum(mass) as mass FROM {TableName}
-                WHERE year >= @FromYear AND year <= @ToYear AND class = @ClassName AND name LIKE @Name
+                WHERE year >= @FromYear AND year <= @ToYear AND class = @MeteoriteClass AND name ILIKE @Name
                 GROUP BY year"
             );
-            sql.Append($" ORDER BY {filters.SortField.ToLower()} {(filters.IsDesc ? SortingDirection.DESC.ToString() : SortingDirection.ASC.ToString())}");
+            sql.Append($" ORDER BY {filters.SortableField.ToLower()} {(filters.IsDesc ? SortingDirection.DESC.ToString() : SortingDirection.ASC.ToString())}");
             sql.Append($" LIMIT @Take OFFSET @Skip ");
-            
-            return await connection.QueryAsync<GroupedMeteorites>(sql.ToString(), param);
+
+            using var connection = _provider.GetConnection();
+            return await connection.QueryAsync<MeteoriteGroupRow>(sql.ToString(), param);
         }
 
         public async Task<IEnumerable<string>> GetAllClassesAsync()
         {
+            var sql = $"SELECT DISTINCT class FROM {TableName} ORDER BY class";
+
             using var connection = _provider.GetConnection();
-            var sql = $"SELECT DISTINCT class FROM {TableName}";
             return await connection.QueryAsync<string>(sql);
         }
 
-        public async Task<int> CreateRangeAsync(IEnumerable<Meteorite> entity)
+        public async Task<int> AddRangeAsync(IEnumerable<Meteorite> entity)
         {
-            using var connection = _provider.GetConnection();
             var sql = $@"INSERT INTO {TableName} (id, name, nametype, class, mass, fall, year, geolocation)
                          VALUES (@Id, @Name, @NameType, @Class, @Mass, @Fall, @Year, @GeoLocation::jsonb)
                          ON CONFLICT (id) DO NOTHING";
+
+            using var connection = _provider.GetConnection();
             return await connection.ExecuteAsync(sql, entity);
         }
     }

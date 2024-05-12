@@ -27,13 +27,13 @@ namespace Application.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<GroupedMeteorites>> GetByFiltersAsync(ReqFilterMeteorites req)
+        public async Task<IEnumerable<MeteoriteGroupRow>> GetFiltered(MeteoritesFiltersReq req)
         {
             var key = JsonConvert.SerializeObject(req);
-            if (!_memoryCache.TryGetValue(key, out IEnumerable<GroupedMeteorites> cache))
+            if (!_memoryCache.TryGetValue(key, out IEnumerable<MeteoriteGroupRow> cache))
             {
-                var filters = _mapper.Map<FiltersMeteoritesInfo>(req);
-                var meteorites = await _meteoriteRepository.GetAllByParamAsync(filters);
+                var filters = _mapper.Map<MeteoritesFilters>(req);
+                var meteorites = await _meteoriteRepository.GetFiltered(filters);
                 _memoryCache.Set(key, meteorites, new MemoryCacheEntryOptions().SetAbsoluteExpiration(TimeSpan.FromMinutes(60)));
                 return meteorites;
             }
@@ -55,9 +55,9 @@ namespace Application.Services
         public async Task<int> LoadAsync()
         {
             using HttpClient client = _httpClientFactory.CreateClient("MeteoriteClient");
-            var meteoritesDTO = await _nasaApiServices.GetMeteoriteInfoAsync(client);
+            var meteoritesDTO = await _nasaApiServices.GetMeteoriteAsync(client);
             var meteorites = _mapper.Map<IEnumerable<Meteorite>>(meteoritesDTO);
-            return await _meteoriteRepository.CreateRangeAsync(meteorites);
+            return await _meteoriteRepository.AddRangeAsync(meteorites);
         }
     }
 }

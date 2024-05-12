@@ -4,6 +4,6 @@
     {
         public string TableName { get; }
 
-        Task<int> CreateRangeAsync(IEnumerable<T> entity);
+        Task<int> AddRangeAsync(IEnumerable<T> entity);
     }
 }

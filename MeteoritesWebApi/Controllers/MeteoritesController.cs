@@ -21,16 +21,15 @@ namespace MeteoritesWebApi.Controllers
         /// <returns></returns>
         [Route("GetMeteorites")]
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery] ReqFilterMeteorites req)
+        public async Task<IActionResult> Get([FromQuery] MeteoritesFiltersReq req)
         {
-            var meteorites = await _meteoriteServices.GetByFiltersAsync(req);
+            var meteorites = await _meteoriteServices.GetFiltered(req);
             return Ok(meteorites);
         }
 
         /// <summary>
         /// Get all classes Meteorites
         /// </summary>
-        /// <param name="req"></param>
         /// <returns></returns>
         [Route("GetMeteoritesClasses")]
         [HttpGet]

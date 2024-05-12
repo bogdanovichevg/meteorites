@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ReqGetMeteorites } from "../models";
+import { MeteoritesFiltersReq } from "../models";
 
 export class MeteoriteApi {
   #baseUrl: string;
@@ -8,17 +8,17 @@ export class MeteoriteApi {
     this.#baseUrl = "http://localhost:4000/Meteorites/";
   }
 
-  async getMeteorites(req: ReqGetMeteorites) {
+  async getMeteorites(req: MeteoritesFiltersReq) {
     try {
       const params = new URLSearchParams();
-      params.append("FromYear", req.fromYear.toString());
-      params.append("ToYear", req.toYear.toString());
-      params.append("MeteoriteName", req.meteoriteName);
-      params.append("ClassName", req.className);
-      params.append("SortField", req.sortField);
-      params.append("Take", req.take.toString());
-      params.append("Skip", req.skip.toString());
-      params.append("IsDesc", req.isDesc.toString());
+      params.append("fromYear", req.fromYear.toString());
+      params.append("toYear", req.toYear.toString());
+      params.append("meteoriteName", req.meteoriteName);
+      params.append("meteoriteClass", req.meteoriteClass);
+      params.append("sortableField", req.sortableField);
+      params.append("isDesc", req.isDesc.toString());
+      params.append("take", req.take.toString());
+      params.append("skip", req.skip.toString());
       const response = await axios.get(`${this.#baseUrl}GetMeteorites`, {
         params,
       });

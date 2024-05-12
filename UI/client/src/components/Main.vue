@@ -52,7 +52,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch, computed } from "vue";
 import { MeteoriteApi } from "../api";
-import { GroupMeteorites, ReqGetMeteorites } from "../models";
+import { ResultMeteoriteGrouping, MeteoritesFiltersReq } from "../models";
 
 const itemsPerPage = 10;
 const headers = [
@@ -66,26 +66,26 @@ const years = computed(() => Array.from(Array(2101).keys()));
 const loading = ref<boolean>(false);
 const fromYear = ref<number>(0);
 const toYear = ref<number>(2100);
-const items = ref<GroupMeteorites>([]);
+const items = ref<ResultMeteoriteGrouping>([]);
 const classes = ref<string[]>([]);
 const selectedСlass = ref<string>("");
-const sortedField = ref<string>("year");
+const sortableField = ref<string>("year");
 const nameMeteorite = ref<string>("");
 const skip = ref<number>(0);
 const isDesc = ref<boolean>(false);
 
 async function updateData() {
   const api = new MeteoriteApi();
-  const meteorites: GroupMeteorites = await api.getMeteorites({
+  const meteorites: ResultMeteoriteGrouping = await api.getMeteorites({
     fromYear: fromYear.value,
     toYear: toYear.value,
-    className: selectedСlass.value,
     meteoriteName: nameMeteorite.value,
-    sortField: sortedField.value,
+    meteoriteClass: selectedСlass.value,
+    sortableField: sortableField.value,
+    isDesc: isDesc.value,
     take: itemsPerPage,
     skip: skip.value,
-    isDesc: isDesc.value,
-  } as ReqGetMeteorites);
+  } as MeteoritesFiltersReq);
   items.value = meteorites;
   totalItems.value = meteorites.length != 0 ? meteorites[0].totalCount : 0;
 }
@@ -93,7 +93,7 @@ async function updateData() {
 function loadData({ page, sortBy }) {
   if (sortBy && sortBy.length) {
     const { key, order } = sortBy[0];
-    sortedField.value = key;
+    sortableField.value = key;
     setTypeSort(order);
   }
   skip.value = itemsPerPage * page - itemsPerPage;
@@ -115,7 +115,7 @@ onMounted(async () => {
 });
 
 watch(
-  [sortedField, selectedСlass, nameMeteorite, fromYear, toYear, isDesc, skip],
+  [sortableField, selectedСlass, nameMeteorite, fromYear, toYear, isDesc, skip],
   async (newVal, oldVal) => {
     await updateData();
   }

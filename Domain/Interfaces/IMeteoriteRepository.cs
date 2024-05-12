@@ -5,7 +5,7 @@ namespace Domain.Interfaces
 {
     public interface IMeteoriteRepository : IBaseRepository<Meteorite>
     {
-        Task<IEnumerable<GroupedMeteorites>> GetAllByParamAsync(FiltersMeteoritesInfo filters);
+        Task<IEnumerable<MeteoriteGroupRow>> GetFiltered(MeteoritesFilters filters);
         Task<IEnumerable<string>> GetAllClassesAsync();
     }
 }

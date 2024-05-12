@@ -19,7 +19,6 @@ namespace LoadMeteoritesInfoWS
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex);
                     //Logger.Error
                 }
                 await Task.Delay(TimeSpan.FromDays(1), stoppingToken);

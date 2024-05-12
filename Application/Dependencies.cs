@@ -1,12 +1,12 @@
 ﻿using Application.DTO;
 using Application.Interfaces;
-using Application.MappingProfile;
+using Application.MappingProfiles;
+using Application.Policies;
 using Application.Services;
 using Application.Validation;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.Extensions.DependencyInjection;
-using Polly;
 
 namespace Application
 {
@@ -18,11 +18,11 @@ namespace Application
             services.AddAutoMapper(typeof(MeteoriteProfile));
             services.AddFluentValidationAutoValidation();
             services.AddScoped<IValidator<Pagination>, PaginationValidation>();
-            services.AddScoped<IValidator<ReqFilterMeteorites>, GetMeteoritesInfoValidation>();
+            services.AddScoped<IValidator<MeteoritesFiltersReq>, MeteoritesFiltersReqValidation>();
             services.AddMemoryCache();
 
             services.AddHttpClient("MeteoriteClient")
-                .AddTransientHttpErrorPolicy(builder => builder.WaitAndRetryAsync(5, _ => TimeSpan.FromSeconds(10)));
+                .AddPolicies();
         }
     }
 }

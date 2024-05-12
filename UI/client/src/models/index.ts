@@ -1,3 +1,3 @@
-export * from "./req-get-meteorites";
-export * from "./group-meteorite";
-export * from "./group-meteorites"
+export * from "./meteorites-filters-req";
+export * from "./meteorite-group-row";
+export * from "./result-meteorite-grouping"
