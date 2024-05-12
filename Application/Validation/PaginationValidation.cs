@@ -12,7 +12,6 @@ namespace Application.Validation
                 .GreaterThanOrEqualTo(0);
 
             RuleFor(x => x.Skip)
-                .LessThanOrEqualTo(100)
                 .GreaterThanOrEqualTo(0);
         }
     }
