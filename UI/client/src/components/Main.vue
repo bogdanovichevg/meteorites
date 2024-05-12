@@ -3,7 +3,7 @@
     <v-row class="top-panel">
       <v-col>
         <v-select
-          v-model="fromYear"
+          v-model="filters.fromYear"
           label="С"
           :items="years"
           density="compact"
@@ -12,7 +12,7 @@
       </v-col>
       <v-col>
         <v-select
-          v-model="toYear"
+          v-model="filters.toYear"
           label="По"
           :items="years"
           density="compact"
@@ -21,7 +21,7 @@
       </v-col>
       <v-col>
         <v-text-field
-          v-model="nameMeteorite"
+          v-model="filters.meteoriteName"
           label="Название метеорита"
           density="compact"
           variant="solo"
@@ -29,9 +29,9 @@
       </v-col>
       <v-col>
         <v-select
-          v-model="selectedСlass"
+          v-model="filters.meteoriteClass"
           label="Класс метеорита"
-          :items="classes"
+          :items="allMeteoritesClasses"
           density="compact"
           variant="solo"
         ></v-select>
@@ -40,7 +40,7 @@
     <v-data-table-server
       v-model:items-per-page="itemsPerPage"
       :headers="headers"
-      :items="items"
+      :items="meteorites"
       :items-length="totalItems"
       :loading="loading"
       :items-per-page-options="[{ value: 10, title: '10' }]"
@@ -50,8 +50,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch, computed } from "vue";
-import { MeteoriteApi } from "../api";
+import { onMounted, ref, watch, computed, reactive } from "vue";
+import { MeteoriteApi } from "../services";
 import { ResultMeteoriteGrouping, MeteoritesFiltersReq } from "../models";
 
 const itemsPerPage = 10;
@@ -64,62 +64,57 @@ const headers = [
 const totalItems = ref(0);
 const years = computed(() => Array.from(Array(2101).keys()));
 const loading = ref<boolean>(false);
-const fromYear = ref<number>(0);
-const toYear = ref<number>(2100);
-const items = ref<ResultMeteoriteGrouping>([]);
-const classes = ref<string[]>([]);
-const selectedСlass = ref<string>("");
-const sortableField = ref<string>("year");
-const nameMeteorite = ref<string>("");
-const skip = ref<number>(0);
-const isDesc = ref<boolean>(false);
+const meteorites = ref<ResultMeteoriteGrouping>([]);
+const allMeteoritesClasses = ref<string[]>([]);
+
+const filters: MeteoritesFiltersReq = reactive({
+  fromYear: 0,
+  toYear: 2100,
+  meteoriteName: "",
+  meteoriteClass: "",
+  sortableField: "year",
+  isDesc: false,
+  take: itemsPerPage,
+  skip: 0,
+});
 
 async function updateData() {
   const api = new MeteoriteApi();
-  const meteorites: ResultMeteoriteGrouping = await api.getMeteorites({
-    fromYear: fromYear.value,
-    toYear: toYear.value,
-    meteoriteName: nameMeteorite.value,
-    meteoriteClass: selectedСlass.value,
-    sortableField: sortableField.value,
-    isDesc: isDesc.value,
-    take: itemsPerPage,
-    skip: skip.value,
-  } as MeteoritesFiltersReq);
-  items.value = meteorites;
-  totalItems.value = meteorites.length != 0 ? meteorites[0].totalCount : 0;
+  const meteoritesForApi: ResultMeteoriteGrouping = await api.getMeteorites(
+    filters
+  );
+  meteorites.value = meteoritesForApi;
+  totalItems.value =
+    meteoritesForApi.length != 0 ? meteoritesForApi[0].totalCount : 0;
 }
 
 function loadData({ page, sortBy }) {
   if (sortBy && sortBy.length) {
     const { key, order } = sortBy[0];
-    sortableField.value = key;
+    filters.sortableField = key;
     setTypeSort(order);
   }
-  skip.value = itemsPerPage * page - itemsPerPage;
+  filters.skip = itemsPerPage * page - itemsPerPage;
 }
 
 function setTypeSort(type: string) {
   if (type == "desc") {
-    isDesc.value = true;
-  } else {
-    isDesc.value = false;
+    filters.isDesc = true;
+    return;
   }
+  filters.isDesc = false;
 }
 
 onMounted(async () => {
   const api = new MeteoriteApi();
-  classes.value = await api.getMeteoritesClasses();
-  selectedСlass.value = classes.value[0];
+  allMeteoritesClasses.value = await api.getMeteoritesClasses();
+  filters.meteoriteClass = allMeteoritesClasses.value[0];
   await updateData();
 });
 
-watch(
-  [sortableField, selectedСlass, nameMeteorite, fromYear, toYear, isDesc, skip],
-  async (newVal, oldVal) => {
-    await updateData();
-  }
-);
+watch([filters], async (newVal, oldVal) => {
+  await updateData();
+});
 </script>
 
 <style scoped>
